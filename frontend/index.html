@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Crud Hello Jpa</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
+      crossorigin="anonymous"
+    />
+  </head>
+  <body class="bg-light">
+    <div class="container">
+      <div class="col-12 mx-5 my-5">
+        <div class="container bg-white border rounded">
+          <div class="my-5 mx-5">
+            <div>
+              <div class="d-flex justify-content-between">
+                <h2>Papéis</h2>
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  data-bs-toggle="modal"
+                  data-bs-target="#exampleModal"
+                >
+                  Cadastrar Novo Papel
+                </button>
+              </div>
+              <div class="pt-5">
+                <div class="d-flex justify-content-end">
+                  <button
+                    type="button"
+                    class="btn btn-danger"
+                    onclick="excluirTodosPapeis()"
+                  >
+                    Excluir Todos
+                  </button>
+                </div>
+                <table class="table" id="papeisTable">
+                  <thead>
+                    <tr>
+                      <th scope="col">Id</th>
+                      <th scope="col">Descrição</th>
+                      <th scope="col"></th>
+                      <th scope="col"></th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Cadastrar-->
+    <div
+      class="modal fade"
+      id="exampleModal"
+      tabindex="-1"
+      aria-labelledby="exampleModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <form id="cadastroForm">
+            <div class="modal-header">
+              <h1 class="modal-title fs-5" id="exampleModalLabel">
+                Cadastrar Novo Papel
+              </h1>
+              <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <div class="modal-body">
+              <div class="mb-3">
+                <label for="descricao" class="form-label">Descrição</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="descricao"
+                  aria-describedby="descricao"
+                />
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-bs-dismiss="modal"
+              >
+                Fechar
+              </button>
+              <button type="submit" class="btn btn-primary">Cadastrar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Editar-->
+    <div
+      class="modal fade"
+      id="editModal"
+      tabindex="-1"
+      aria-labelledby="editModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="editModalLabel">Editar Papel</h1>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <form id="editForm">
+              <input type="hidden" id="editId" />
+              <div class="mb-3">
+                <label for="editDescricao" class="form-label"
+                  >Nova Descrição</label
+                >
+                <input
+                  type="text"
+                  class="form-control"
+                  id="editDescricao"
+                  aria-describedby="editDescricao"
+                />
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Fechar
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              onclick="salvarEdicao()"
+            >
+              Salvar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+      crossorigin="anonymous"
+    ></script>
+    <script>
+      let apiUrl = "http://localhost:8080/papeis";
+
+      function excluirTodosPapeis() {
+        const confirmacao = confirm(
+          "Tem certeza que deseja excluir todos os papéis?"
+        );
+
+        if (confirmacao) {
+          fetch(apiUrl + "/all", {
+            method: "DELETE",
+          })
+            .then((response) => {
+              if (response.ok) {
+                alert("Todos os papéis foram excluídos com sucesso!");
+                listarPapeis();
+              } else {
+                alert(
+                  "Erro ao excluir todos os papéis. Por favor, tente novamente mais tarde."
+                );
+              }
+            })
+            .catch((error) => {
+              console.error("Erro ao excluir todos os papéis:", error);
+              alert(
+                "Erro ao excluir todos os papéis. Por favor, tente novamente mais tarde."
+              );
+            });
+        }
+      }
+
+      var editModal = new bootstrap.Modal(
+        document.getElementById("editModal"),
+        {}
+      );
+      var cadastrarModal = new bootstrap.Modal(
+        document.getElementById("exampleModal"),
+        {}
+      );
+      function editarPapel(id, descricaoAtual) {
+        document.getElementById("editId").value = id;
+        document.getElementById("editDescricao").value = descricaoAtual;
+
+        editModal.show();
+      }
+
+      function salvarEdicao() {
+        const id = document.getElementById("editId").value;
+        const novaDescricao = document.getElementById("editDescricao").value;
+
+        if (id && novaDescricao) {
+          fetch(apiUrl + `/${id}`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ descricao: novaDescricao }),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              alert("Papel atualizado com sucesso!");
+              editModal.hide();
+
+              listarPapeis();
+            })
+            .catch((error) => {
+              console.error("Erro ao editar papel:", error);
+            });
+        } else {
+          alert("Por favor, insira uma descrição para o papel.");
+        }
+      }
+
+      function excluirPapel(id) {
+        const confirmacao = confirm(
+          "Tem certeza que deseja excluir este papel?"
+        );
+
+        if (confirmacao) {
+          fetch(apiUrl + `/${id}`, {
+            method: "DELETE",
+          })
+            .then((response) => {
+              if (response.ok) {
+                alert("Papel excluído com sucesso!");
+                listarPapeis();
+              } else {
+                alert(
+                  "Erro ao excluir papel. Por favor, tente novamente mais tarde."
+                );
+              }
+            })
+            .catch((error) => {
+              console.error("Erro ao excluir papel:", error);
+              alert(
+                "Erro ao excluir papel. Por favor, tente novamente mais tarde."
+              );
+            });
+        }
+      }
+
+      function listarPapeis() {
+        fetch(apiUrl)
+          .then((response) => response.json())
+          .then((data) => {
+            const tableBody = document
+              .getElementById("papeisTable")
+              .getElementsByTagName("tbody")[0];
+            tableBody.innerHTML = "";
+
+            data.forEach((papel) => {
+              const row = tableBody.insertRow();
+              const cellId = row.insertCell(0);
+              const cellDescricao = row.insertCell(1);
+              const cellEditar = row.insertCell(2);
+              const cellExcluir = row.insertCell(3);
+
+              cellId.textContent = papel.id;
+              cellDescricao.textContent = papel.descricao;
+
+              cellEditar.innerHTML = `<button class="btn btn-warning" onclick="editarPapel(${papel.id}, '${papel.descricao}')">Editar</button>`;
+              cellExcluir.innerHTML = `<button class="btn btn-danger" onclick="excluirPapel(${papel.id})">Excluir</button>`;
+            });
+          })
+          .catch((error) => {
+            console.error("Erro ao buscar papeis:", error);
+          });
+      }
+
+      document.addEventListener("DOMContentLoaded", function () {
+        const cadastroForm = document.getElementById("cadastroForm");
+
+        cadastroForm.addEventListener("submit", function (event) {
+          event.preventDefault(); // Evita o envio tradicional do formulário
+
+          const descricao = document.getElementById("descricao").value;
+
+          if (descricao) {
+            fetch(apiUrl, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ descricao: descricao }),
+            })
+              .then((response) => response.json())
+              .then((data) => {
+                alert("Papel cadastrado com sucesso!");
+                document.getElementById("descricao").value = "";
+                let modal = document.getElementById("exampleModal");
+                cadastrarModal.hide();
+                listarPapeis();
+              })
+              .catch((error) => {
+                console.error("Erro ao cadastrar papel:", error);
+              });
+          } else {
+            alert("Por favor, insira uma descrição para o papel.");
+          }
+        });
+
+        listarPapeis();
+      });
+    </script>
+  </body>
+</html>
